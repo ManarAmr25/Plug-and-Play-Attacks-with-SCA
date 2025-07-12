@@ -2,7 +2,7 @@
 seed: 42
 
 model:
-  architecture: convSca # options: convNod, convSca
+  architecture: convNod # options: convNod, convSca
   num_classes: 5
   pretrained: true
 
@@ -11,10 +11,10 @@ dataset:
   type: celeba_attr
   path: /content/data/celeba
   validation_set_size: 0
-  image_size: 224
+  image_size: 32
 transformations:
   RandomResizedCrop:
-    size: [224, 224]
+    size: [32, 32]
     scale: [0.85, 1]
     ratio: [1, 1]
     antialias: true
@@ -44,7 +44,7 @@ training:
   # num_epochs: 100
   num_epochs: 1
   # batch_size: 128
-  batch_size: 16
+  batch_size: 32
   label_smoothing: 0.0
   dataloader_num_workers: 8
   save_path: results/

@@ -28,7 +28,11 @@ class AttackConfigParser:
             config = self._config['target_model']
             model = Classifier(num_classes=config['num_classes'],
                                architecture=config['architecture'])
-            model.load_state_dict(torch.load(config['weights']))
+            
+            state_dict = torch.load(config['weights'])['model_state_dict']
+            new_state_dict = {k.replace('model._orig_mod.', 'model.'): v for k, v in state_dict.items()}
+            model.load_state_dict(new_state_dict)
+
             model.wandb_name = None
         else:
             raise RuntimeError('No target model stated in the config file.')
@@ -50,9 +54,14 @@ class AttackConfigParser:
             evaluation_model = load_model(self._config['wandb_evaluation_run'])
         elif 'evaluation_model' in self._config:
             config = self._config['evaluation_model']
-            evaluation_model = Classifier(num_classes=config['num_classes'],
-                                          architecture=config['architecture'])
-            evaluation_model.load_state_dict(torch.load(config['weights']))
+            if config['pretrained']:
+                evaluation_model = Classifier(num_classes=config['num_classes'],
+                                              architecture=config['architecture'],
+                                              pretrained=True)
+            else:
+                evaluation_model = Classifier(num_classes=config['num_classes'],
+                                              architecture=config['architecture'])
+                evaluation_model.load_state_dict(torch.load(config['weights']))
         else:
             raise RuntimeError(
                 'No evaluation model stated in the config file.')
@@ -128,8 +137,10 @@ class AttackConfigParser:
             targets = torch.tensor(target_classes)
             targets = torch.repeat_interleave(targets, num_candidates)
         elif target_classes == 'all':
+            print(f'>>>> num classes = {self.model.num_classes}')
             targets = torch.tensor([i for i in range(self.model.num_classes)])
             targets = torch.repeat_interleave(targets, num_candidates)
+            print(f'>>>>> target shape = {targets.shape}')
         elif type(target_classes) == int:
             targets = torch.full(size=(num_candidates, ),
                                  fill_value=target_classes)

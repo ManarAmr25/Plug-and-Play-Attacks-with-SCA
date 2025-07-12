@@ -49,9 +49,10 @@ def main():
 
     # Load idx to class mappings
     idx_to_class = None
-    if config.dataset.lower() == 'facescrub':
+    dataset_name = config.dataset['type']
+    if dataset_name.lower() == 'facescrub':
         idx_to_class = get_facescrub_idx_to_class()
-    elif config.dataset.lower() == 'stanford_dogs':
+    elif dataset_name.lower() == 'stanford_dogs':
         idx_to_class = get_stanford_dogs_idx_to_class()
     else:
 
@@ -300,7 +301,7 @@ def main():
                                    gpu_devices=gpu_devices)
         fid_score = fid_evaluation.compute_fid(rtpt)
         print(
-            f'FID score computed on {final_w.shape[0]} attack samples and {config.dataset}: {fid_score:.4f}'
+            f'FID score computed on {final_w.shape[0]} attack samples and {dataset_name}: {fid_score:.4f}'
         )
 
         # compute precision, recall, density, coverage

@@ -85,7 +85,7 @@ def load_generator(filepath):
         torch.nn.Module: G_ema from pickle
     """
     with open(filepath, 'rb') as f:
-        sys.path.insert(0, 'stylegan2-ada-pytorch')
+        sys.path.insert(0, 'Pnp_stylegan3/stylegan2-ada-pytorch') # change path
         G = pickle.load(f)['G_ema'].cuda()
     return G
 

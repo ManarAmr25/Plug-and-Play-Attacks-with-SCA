@@ -85,16 +85,18 @@ def get_stanford_dogs_class_to_idx():
     return class_to_idx
 
 
-def create_target_dataset(dataset_name, transform):
+def create_target_dataset(dataset_config, transform):
+    dataset_name = dataset_config['type']
+    dataset_path = dataset_config['path']
     if dataset_name.lower() == 'facescrub':
         return FaceScrub(group='all',
                          train=True,
                          transform=transform)
     elif dataset_name.lower() == 'celeba_identities':
-        return CelebA1000(train=True, transform=transform)
+        return CelebA1000(train=True, transform=transform, root=dataset_path)
     elif dataset_name.lower() == 'celeba_attr':
-        return CelebAAttr(train=True, transform=transform)
+        return CelebAAttr(train=True, transform=transform, root=dataset_path)
     elif 'stanford_dogs' in dataset_name.lower():
-        return StanfordDogs(train=True, cropped=True, transform=transform)
+        return StanfordDogs(train=True, cropped=True, transform=transform, root=dataset_path)
     else:
         print(f'{dataset_name} is no valid dataset.')

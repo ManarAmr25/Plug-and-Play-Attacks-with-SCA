@@ -81,7 +81,8 @@ class NoDefSplitNN(nn.Module):
                            #scancel nn.Softmax(dim=-1),
                          )
     self.third_part = nn.Sequential(
-                            nn.Linear(256 * 14 * 14, 512), #TODO
+                            nn.Linear(256*2*2, 512),
+                            # nn.Linear(256 * 14 * 14, 512),
                             nn.ReLU(),
                             # nn.Linear(512, 5),
                             nn.Linear(512, num_classes)
@@ -95,8 +96,8 @@ class NoDefSplitNN(nn.Module):
     #print(x.shape)
     x=self.second_part(x)
     # print(">>>> before view: ", x.shape)
-    # x = x.view(-1, 256*2*2)
-    x = x.view(x.shape[0], -1)
+    x = x.view(-1, 256*2*2)
+    # x = x.view(x.shape[0], -1)
     # print(">>>> after view: ", x.shape)
     x=self.third_part(x)
     # print(">>>> after 3rd part: ", x.shape)
@@ -152,8 +153,8 @@ class ScaSplitNN(nn.Module):
                            #scancel nn.Softmax(dim=-1),
                          )
     self.third_part = nn.Sequential(
-                            # nn.Linear(256*2*2, 512),
-                            nn.Linear(256 * 14 * 14, 512), #TODO
+                            nn.Linear(256*2*2, 512),
+                            # nn.Linear(256 * 14 * 14, 512),
                             nn.ReLU(),
                             # nn.Linear(512, 10),  
                             nn.Linear(512, num_classes)
@@ -168,8 +169,8 @@ class ScaSplitNN(nn.Module):
     #print(x.shape)
     x=self.second_part(x)
     #print(x.shape)
-    # x = x.view(-1, 256*2*2)
-    x = x.view(x.shape[0], -1)
+    x = x.view(-1, 256*2*2)
+    # x = x.view(x.shape[0], -1)
     x=self.third_part(x)
 
     return x

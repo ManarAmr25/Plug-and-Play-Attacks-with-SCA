@@ -140,10 +140,15 @@ class Classifier(BaseModel):
 
         # Note: inception_v3 expects input tensors with a size of N x 3 x 299 x 299, aux_logits are used per default
         elif 'inception' in architecture:
-            weights = inception.Inception_V3_Weights.DEFAULT if pretrained else None
-            model = inception.inception_v3(weights=weights,
-                                           aux_logits=True,
-                                           init_weights=True)
+            if pretrained:
+                weights = inception.Inception_V3_Weights.DEFAULT
+                model = inception.inception_v3(weights=weights,
+                                               aux_logits=True)
+            else:
+                weights = None
+                model = inception.inception_v3(weights=weights,
+                                               aux_logits=True,
+                                               init_weights=True)
             if self.num_classes != model.fc.out_features:
                 # exchange the last layer to match the desired numbers of classes
                 model.fc = nn.Linear(model.fc.in_features, self.num_classes)
