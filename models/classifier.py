@@ -16,6 +16,7 @@ from torchvision.transforms import (ColorJitter, RandomCrop,
 from tqdm import tqdm
 
 from models.base_model import BaseModel
+from models.sca_model import NoDefSplitNN, ScaSplitNN
 
 
 class Classifier(BaseModel):
@@ -174,6 +175,16 @@ class Classifier(BaseModel):
                                        self.num_classes)
             return model
 
+        elif 'conv' in architecture:
+            print(f'arch == {architecture}')
+            if architecture == 'convnod':
+                model = NoDefSplitNN(self.num_classes)
+            elif architecture == 'convsca':
+                model = ScaSplitNN(self.num_classes)
+            else:
+                raise RuntimeError(f'No conv with the name {architecture} available')
+
+            return model
         else:
             raise RuntimeError(
                 f'No network with the name {architecture} available')
@@ -305,6 +316,12 @@ class Classifier(BaseModel):
                     if self.model.aux_logits:
                         model_output, aux_logits = model_output
 
+                # print(f'>>>>> len labels = {len(labels)}')
+                # print(f'>>>>> labels = {labels}')
+
+                # print(f'.>>>>> input shape = {inputs.shape}')
+                # print(f'.>>>>> output shape = {model_output.shape}')
+                # print(f'.>>>>> output = {model_output}')
                 main_loss = criterion(model_output, labels)
                 if aux_logits is not None:
                     aux_loss += criterion(aux_logits, labels).sum()
@@ -318,6 +335,11 @@ class Classifier(BaseModel):
                 running_main_loss += main_loss * num_samples
                 running_aux_loss += aux_loss * num_samples
 
+
+                # print(f'>>> len model_output = {len(model_output)}')
+                # print(f'>>> model_output = {model_output}')
+                # print(f'>>> len labels = {len(model_output)}')
+                # print(f'>>> labels = {labels}')
                 metric_train.update(model_output, labels)
 
             print(

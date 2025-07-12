@@ -1,6 +1,6 @@
 import torch
 import torchvision.transforms as T
-from datasets.celeba import CelebA1000
+from datasets.celeba import CelebA1000, CelebAAttr
 from datasets.custom_subset import SingleClassSubset
 from datasets.facescrub import FaceScrub
 from datasets.stanford_dogs import StanfordDogs
@@ -45,6 +45,16 @@ class DistanceEvaluation():
             train_set = CelebA1000(train=True,
                                    transform=transform,
                                    split_seed=self.seed)
+        elif self.dataset_name == 'celeba_attr':
+            transform = T.Compose([
+                T.Resize(self.img_size, antialias=True),
+                T.ToTensor(),
+                T.CenterCrop((self.img_size, self.img_size)),
+                T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+            ])
+            train_set = CelebAAttr(train=True,
+                                        transform=transform,
+                                        split_seed=self.seed)
         elif 'stanford_dogs' in self.dataset_name:
             transform = T.Compose([
                 T.Resize((self.img_size, self.img_size), antialias=True),

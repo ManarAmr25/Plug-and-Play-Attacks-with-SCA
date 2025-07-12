@@ -75,6 +75,73 @@ class CelebA1000(Dataset):
         else:
             return im, self.targets[idx]
 
+class CelebAAttr(Dataset):
+    def __init__(self,
+                 train,
+                 split_seed=42,
+                 transform=None,
+                 root='data/celeba',
+                 download: bool = False):
+
+        # Load CelebA with attribute labels
+        celeba = CustomCelebA(root=root, split='all', target_type="attr")
+        # celeba.targets = celeba.attr
+
+        attr_indices = [4, 8, 9, 11, 17]  # Bald, Black_Hair, Blond_Hair, Brown_Hair, Gray_Hair
+        targets = celeba.attr[:, attr_indices]
+        attr_labels = [celeba.attr_names[i] for i in attr_indices] # for debugging
+        # print(f'>>> attr labels = {attr_labels}')
+
+        targets = targets.float()
+        # print(f'>>> targets: {targets}')
+        # print(f'>>> targets shape: {targets.shape}')
+        indices = np.arange(len(celeba))
+        np.random.seed(split_seed)
+        np.random.shuffle(indices)
+        training_set_size = int(0.9 * len(indices))
+        train_idx = indices[:training_set_size]
+        test_idx = indices[training_set_size:]
+
+        # Assert that there are no overlapping datasets
+        assert len(set.intersection(set(train_idx), set(test_idx))) == 0
+
+        # Set transformations
+        self.transform = transform
+
+        # Split dataset
+        if train:
+            self.dataset = Subset(celeba, train_idx)
+            train_targets = np.array(targets)[train_idx]
+            self.targets = [t for t in train_targets]
+            self.name = 'CelebAAttr_train'
+        else:
+            self.dataset = Subset(celeba, test_idx)
+            test_targets = np.array(targets)[test_idx]
+            self.targets = [t for t in test_targets]
+            self.name = 'CelebAAttr_test'
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        im, _ = self.dataset[idx]
+        
+        # compute class label as in SCA paper
+        attributes = self.targets[idx]
+        bald = attributes[0] # assigned one by one for clarification
+        black = attributes[1]
+        blond = attributes[2]
+        brown = attributes[3]
+        gray = attributes[4]
+            
+        sum_attr=abs(bald + black + blond + brown + gray)
+        y_label = torch.tensor(int(sum_attr))-1
+        # print(f'>>> in get item = {attributes}, sum = {sum_attr}, label = {y_label}')
+
+        if self.transform:
+            return self.transform(im), y_label
+        else:
+            return im, y_label
 
 class CustomCelebA(VisionDataset):
     """ 
@@ -122,7 +189,7 @@ class CustomCelebA(VisionDataset):
         self.bbox = torch.as_tensor(bbox[mask].values)
         self.landmarks_align = torch.as_tensor(landmarks_align[mask].values)
         self.attr = torch.as_tensor(attr[mask].values)
-        self.attr = torch.div(self.attr + 1, 2, rounding_mode='floor') # map from {-1, 1} to {0, 1}
+        # self.attr = torch.div(self.attr + 1, 2, rounding_mode='floor') # map from {-1, 1} to {0, 1}
         self.attr_names = list(attr.columns)
 
 

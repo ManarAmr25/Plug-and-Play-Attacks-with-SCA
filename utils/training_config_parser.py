@@ -9,7 +9,7 @@ from models.classifier import Classifier
 from rtpt.rtpt import RTPT
 from torchvision.datasets import *
 
-from datasets.celeba import CelebA1000
+from datasets.celeba import CelebA1000, CelebAAttr
 from datasets.custom_subset import Subset
 from datasets.facescrub import FaceScrub
 from datasets.stanford_dogs import StanfordDogs
@@ -32,6 +32,7 @@ class TrainingConfigParser:
     def create_datasets(self):
         dataset_config = self._config['dataset']
         name = dataset_config['type'].lower()
+        dataset_path = dataset_config['path']
         train_set, valid_set, test_set = None, None, None
 
         data_transformation_train = self.create_transformations(
@@ -50,8 +51,14 @@ class TrainingConfigParser:
                                  cropped=True,
                                  transform=data_transformation_test)
         elif name == 'celeba_identities':
-            train_set = CelebA1000(train=True)
+            train_set = CelebA1000(train=True, root=dataset_path)
             test_set = CelebA1000(train=False,
+                                  root=dataset_path,
+                                  transform=data_transformation_test)
+        elif name == 'celeba_attr':
+            train_set = CelebAAttr(train=True, root=dataset_path)
+            test_set = CelebAAttr(train=False,
+                                  root=dataset_path,
                                   transform=data_transformation_test)
         elif name == 'stanford_dogs_uncropped':
             train_set = StanfordDogs(train=True, cropped=False)
@@ -164,6 +171,7 @@ class TrainingConfigParser:
                     f'{optimizer_type} is no valid optimizer. Please write the type exactly as the PyTorch class'
                 )
 
+            # print(f'>>>> args: {args}')
             optimizer_class = getattr(optim, optimizer_type)
             optimizer = optimizer_class(model.parameters(), **args)
             break

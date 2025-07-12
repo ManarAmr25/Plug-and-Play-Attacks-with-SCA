@@ -16,6 +16,10 @@ class BaseMetric():
 
     def update(self, model_output, y_true):
         y_pred = torch.argmax(model_output, dim=1)
+        # print(f'len y_pred = {len(y_pred)}')
+        # print(f'y_pred = {y_pred}')
+        # print(f'y_pred shape = {y_pred.shape}')
+        # print(f'y_true shape = {y_true.shape}')
         self._num_corrects += torch.sum(y_pred == y_true).item()
         self._num_samples += y_true.shape[0]
 
