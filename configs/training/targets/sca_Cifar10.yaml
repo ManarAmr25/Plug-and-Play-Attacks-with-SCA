@@ -3,28 +3,28 @@ seed: 42
 
 model:
   architecture: convNod # options: convNod, convSca, linearNod, linearSca
-  num_classes: 5
+  num_classes: 10
   pretrained: false
 
 dataset:
   # type: celeba_identities
-  type: celeba_attr
-  path: /content/data/celeba
+  type: cifar10
+  path: /content/data/cifar10
   validation_set_size: 0
   image_size: 32
 transformations:
-  RandomResizedCrop:
-    size: [32, 32]
-    scale: [0.85, 1]
-    ratio: [1, 1]
-    antialias: true
-  ColorJitter:
-    brightness: 0.2
-    contrast: 0.2
-    saturation: 0.1
-    hue: 0.1
-  RandomHorizontalFlip:
-    p: 0.5
+  # Resize:
+  #   size: [40, 40]
+  # RandomCrop:
+  #   size: [32, 32]
+  # RandomRotation:
+  #   degrees: 15
+  # RandomHorizontalFlip:
+  #   p: 0.5
+  ToTensor: {}
+  Normalize:
+    mean: [0.5, 0.5, 0.5]
+    std: [0.5, 0.5, 0.5]
 
 optimizer:
   # Adam:
@@ -57,6 +57,6 @@ wandb:
   # enable_logging: true
   enable_logging: false
   args:
-    project: model_inversion_targets_celeba
-    name: SCA_CelebA
+    project: model_inversion_targets_cifar10
+    name: SCA_Cifar10
     save_code: true

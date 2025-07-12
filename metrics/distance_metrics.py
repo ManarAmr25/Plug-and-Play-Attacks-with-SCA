@@ -1,5 +1,6 @@
 import torch
 import torchvision.transforms as T
+from torchvision.datasets import MNIST, CIFAR10
 from datasets.celeba import CelebA1000, CelebAAttr
 from datasets.custom_subset import SingleClassSubset
 from datasets.facescrub import FaceScrub
@@ -15,7 +16,8 @@ class DistanceEvaluation():
     def __init__(self, model, generator, img_size, center_crop_size, dataset,
                  seed):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.dataset_name = dataset
+        self.dataset_name = dataset['type']
+        self.dataset_path = dataset['path']
         self.model = model
         self.center_crop_size = center_crop_size
         self.img_size = img_size
@@ -44,7 +46,8 @@ class DistanceEvaluation():
             ])
             train_set = CelebA1000(train=True,
                                    transform=transform,
-                                   split_seed=self.seed)
+                                   split_seed=self.seed,
+                                   root=self.dataset_path)
         elif self.dataset_name == 'celeba_attr':
             transform = T.Compose([
                 T.Resize(self.img_size, antialias=True),
@@ -54,7 +57,24 @@ class DistanceEvaluation():
             ])
             train_set = CelebAAttr(train=True,
                                         transform=transform,
-                                        split_seed=self.seed)
+                                        split_seed=self.seed,
+                                        root=self.dataset_path)
+        elif self.dataset_name == 'mnist':
+            transform = T.Compose([
+                               T.ToTensor(),
+                               T.Normalize(
+                                 (0.1307,), (0.3081,))
+                             ])
+            train_set = MNIST(self.dataset_path, train=True, download=True,
+                              transform=transform)  
+        elif self.dataset_name == 'cifar10':
+            transform = T.Compose([
+                T.Resize(self.img_size, antialias=True),
+                T.ToTensor(),
+                T.CenterCrop((self.img_size, self.img_size)),
+                T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+            ])
+            train_set = CIFAR10(self.dataset_path, train=True, download=True, transform=transform)
         elif 'stanford_dogs' in self.dataset_name:
             transform = T.Compose([
                 T.Resize((self.img_size, self.img_size), antialias=True),
@@ -64,10 +84,11 @@ class DistanceEvaluation():
             train_set = StanfordDogs(train=True,
                                      cropped=True,
                                      transform=transform,
-                                     split_seed=self.seed)
+                                     split_seed=self.seed,
+                                     root=self.dataset_path)
         else:
             raise RuntimeError(
-                f'{self.dataset_name} is no valid dataset name. Chose of of [facescrub, celeba_identities, stanford_dogs].'
+                f'{self.dataset_name} is no valid dataset name. Chose of of [facescrub, celeba_identities, celeb_attr, mnist, cifar10, stanford_dogs].'
             )
 
         return train_set

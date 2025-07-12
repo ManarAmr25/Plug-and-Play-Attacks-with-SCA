@@ -7,6 +7,7 @@ import torchvision.transforms as T
 import yaml
 from models.classifier import Classifier
 from rtpt.rtpt import RTPT
+from torchvision.datasets import MNIST, CIFAR10
 from torchvision.datasets import *
 
 from datasets.celeba import CelebA1000, CelebAAttr
@@ -70,6 +71,34 @@ class TrainingConfigParser:
             test_set = StanfordDogs(train=False,
                                     cropped=True,
                                     transform=data_transformation_test)
+        elif name == 'mnist':
+            train_set = MNIST(dataset_path, 
+                              train=True, download=True,
+                              transform=T.Compose([
+                                            T.ToTensor(),
+                                            T.Normalize(
+                                                (0.1307,), (0.3081,))
+                                            ]))
+            test_set = MNIST(dataset_path,
+                             train=False, download=True,
+                             transform=T.Compose([
+                                            T.ToTensor(),
+                                            T.Normalize(
+                                                (0.1307,), (0.3081,))
+                                            ]))
+        elif name == 'cifar10':
+            train_set = CIFAR10(dataset_path, train=True, download=True,
+                             transform=T.Compose([
+                               T.ToTensor(),
+                               T.Normalize(
+                                 (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                             ]))
+            test_set = CIFAR10(dataset_path, train=False, download=True,
+                             transform=T.Compose([
+                               T.ToTensor(),
+                               T.Normalize(
+                                 (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                             ]))
 
         else:
             raise Exception(
@@ -128,6 +157,9 @@ class TrainingConfigParser:
         dataset_config = self._config['dataset']
         dataset_name = self._config['dataset']['type'].lower()
         image_size = dataset_config['image_size']
+
+        if 'mnist' in dataset_name or 'cifar10' in dataset_name: # skip transformations for mnist and cifar
+            return None
 
         transformation_list = []
         # resize images to the expected size

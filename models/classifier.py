@@ -16,7 +16,7 @@ from torchvision.transforms import (ColorJitter, RandomCrop,
 from tqdm import tqdm
 
 from models.base_model import BaseModel
-from models.sca_model import NoDefSplitNN, ScaSplitNN
+from models.sca_model import NoDefSplitNN, ScaSplitNN, LinearNoDefSplitNN, LinearScaSplitNN
 
 
 class Classifier(BaseModel):
@@ -190,6 +190,15 @@ class Classifier(BaseModel):
                 raise RuntimeError(f'No conv with the name {architecture} available')
 
             return model
+        elif 'linear' in architecture:
+            if architecture == 'linearnod':
+                model = LinearNoDefSplitNN(self.num_classes)
+            elif architecture == 'linearsca':
+                model = LinearScaSplitNN(self.num_classes)
+            else: 
+                raise RuntimeError(f'No linear with the name {architecture} available')
+            return model
+            
         else:
             raise RuntimeError(
                 f'No network with the name {architecture} available')

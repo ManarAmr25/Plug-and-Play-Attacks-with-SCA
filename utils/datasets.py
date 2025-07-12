@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torchvision.transforms as T
+from torchvision.datasets import MNIST, CIFAR10
 from torch.utils import data
 from torch.utils.data import random_split
 from torch.utils.data.dataloader import DataLoader
@@ -96,6 +97,18 @@ def create_target_dataset(dataset_config, transform):
         return CelebA1000(train=True, transform=transform, root=dataset_path)
     elif dataset_name.lower() == 'celeba_attr':
         return CelebAAttr(train=True, transform=transform, root=dataset_path)
+    elif dataset_name.lower() == 'mnist':
+        return MNIST(dataset_path, 
+                     train=True, download=True,
+                     transform=T.Compose([
+                                    T.ToTensor(),
+                                    T.Normalize(
+                                        (0.1307,), (0.3081,))
+                                ]))
+    elif dataset_name.lower() == 'cifar10':
+        return CIFAR10(dataset_path, 
+                     train=True, download=True,
+                     transform=transform)
     elif 'stanford_dogs' in dataset_name.lower():
         return StanfordDogs(train=True, cropped=True, transform=transform, root=dataset_path)
     else:

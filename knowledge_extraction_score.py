@@ -8,10 +8,11 @@ from metrics.accuracy import Accuracy
 
 from tqdm import tqdm
 
+from torchvision.datasets import MNIST, CIFAR10
 from datasets.attack_latents import AttackLatents
 from datasets.custom_subset import ClassSubset
 from datasets.facescrub import FaceScrub
-from datasets.celeba import CelebA1000
+from datasets.celeba import CelebA1000, CelebAAttr
 from utils.stylegan import load_generator
 import wandb
 
@@ -47,7 +48,12 @@ def main():
                         '--dataset',
                         type=str,
                         dest="dataset",
-                        help='FaceScrub or CelebA')
+                        help='FaceScrub, CelebA_identity, CelebA_attr, MNIST, or Cifar10')
+    parser.add_argument('-dp',
+                        '--dataset_path',
+                        type=str,
+                        dest="dataset_path",
+                        help='Path to dataset directory')
     parser.add_argument('-u',
                         '--user',
                         type=str,
@@ -100,10 +106,26 @@ def main():
                               train=True,
                               split_seed=run.config['Seed'],
                               transform=transforms_test)
-    elif args.dataset.lower().strip() == 'celeba':
+    elif args.dataset.lower().strip() == 'celeba_identity':
         train_set = CelebA1000(train=True,
                                split_seed=run.config['Seed'],
-                               transform=transforms_test)
+                               transform=transforms_test, 
+                               root=args.dataset_path)
+    elif args.dataset.lower().strip() == 'celeba_attr':
+        train_set = CelebAAttr(train=True,
+                               split_seed=run.config['Seed'],
+                               transform=transforms_test,
+                               root=args.dataset_path)
+    elif args.dataset.lower().strip() == 'mnist':
+        train_set = MNIST(args.dataset_path, train=True, download=True,
+                             transform=T.Compose([
+                               T.ToTensor(),
+                               T.Normalize(
+                                 (0.1307,), (0.3081,))
+                             ]))
+    elif args.dataset.lower().strip() == 'cifar10':
+        train_set = CIFAR10(args.dataset_path, train=True, download=True,
+                             transform=transforms_test)
     else:
         raise ValueError('Invalid dataset specified')
 
@@ -112,11 +134,28 @@ def main():
         test_set = FaceScrub('all',
                              train=False,
                              split_seed=run.config['Seed'],
-                             transform=transforms_test)
-    elif args.dataset.lower().strip() == 'celeba':
+                             transform=transforms_test,
+                             root=args.dataset_path)
+    elif args.dataset.lower().strip() == 'celeba_identity':
         test_set = CelebA1000(train=False,
                               split_seed=run.config['Seed'],
-                              transform=transforms_test)
+                              transform=transforms_test,
+                              root=args.dataset_path)
+    elif args.dataset.lower().strip() == 'celeba_attr':
+        test_set = CelebAAttr(train=False,
+                              split_seed=run.config['Seed'],
+                              transform=transforms_test,
+                              root=args.dataset_path)
+    elif args.dataset.lower().strip() == 'mnist':
+        test_set = MNIST(args.dataset_path, train=False, download=True,
+                            transform=T.Compose([
+                            T.ToTensor(),
+                            T.Normalize(
+                                (0.1307,), (0.3081,))
+                            ]))
+    elif args.dataset.lower().strip() == 'cifar10':
+        test_set = CIFAR10(args.dataset_path, train=False, download=True,
+                             transform=transforms_test)
     else:
         raise ValueError('Invalid dataset specified')
 

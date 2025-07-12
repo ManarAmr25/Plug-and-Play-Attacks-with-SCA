@@ -360,8 +360,8 @@ def main():
         print('Mean Distance on Inception-v3: ',
               avg_dist_inception.cpu().item())
         # Compute feature distance only for facial images
-        if target_dataset in [
-                'facescrub', 'celeba_identities', 'celeba_attributes'
+        if target_dataset['type'] in [
+                'facescrub', 'celeba_identities', 'celeba_attr'
         ]:
             # Load FaceNet model for face recognition
             facenet = InceptionResnetV1(pretrained='vggface2')
@@ -447,7 +447,7 @@ def main():
         facenet = torch.nn.DataParallel(facenet, device_ids=gpu_devices)
         facenet.to(device)
         facenet.eval()
-        if target_dataset in [
+        if target_dataset['type'] in [
                 'facescrub', 'celeba_identities', 'celeba_attributes'
         ]:
             log_nearest_neighbors(log_imgs,

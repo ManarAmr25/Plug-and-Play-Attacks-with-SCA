@@ -35,6 +35,82 @@ import fnmatch
 import sys
 import pickle
 
+class LinearNoDefSplitNN(nn.Module):
+  def __init__(self, num_classes=10):
+    super(LinearNoDefSplitNN, self).__init__()
+
+    self.num_classes = num_classes
+
+    self.first_part = nn.Sequential(
+                           nn.Linear(28, 500),
+                           nn.ReLU(),
+                         )
+    self.second_part = nn.Sequential(
+                           nn.Linear(500, 500),
+                           nn.ReLU(),
+                           nn.Linear(500, 28),
+                           nn.ReLU(), 
+                           nn.Linear(28, 500),                        )
+    self.third_part = nn.Sequential(
+                           nn.Linear(1*28*500, self.num_classes),
+                           #scancel nn.Softmax(dim=-1),
+                         )
+
+  def forward(self, x):
+     #x=x.view(-1,32*32*3)
+    x=self.first_part(x)
+    #print(x.shape)
+    #x = torch.flatten(x, 1) # flatten all dimensions except batch
+    #print(x.shape)
+    x=self.second_part(x)
+    #print(x.shape)
+    x = x.view(-1, 1*28*500)
+    x=self.third_part(x)
+    return x
+  
+class LinearScaSplitNN(nn.Module):
+  def __init__(self, num_classes=10):
+    super(LinearScaSplitNN, self).__init__()
+
+    self.num_classes = num_classes
+
+    self.first_part = nn.Sequential(
+        LCAConv2D(out_neurons=16,
+                in_neurons=1,                        
+                kernel_size=5,              
+                stride=1,                   
+                 lambda_=0.5, lca_iters=500, pad="same",            
+            ),   
+            #nn.BatchNorm2d(16),                           
+       LCAConv2D(out_neurons=28,
+                in_neurons=16,                        
+                kernel_size=5,              
+                stride=1,                   
+                 lambda_=0.5, lca_iters=500, pad="same",            
+            ),                           nn.Linear(28, 500),
+                           nn.ReLU(),
+ 
+                         )
+    self.second_part = nn.Sequential(
+                           nn.Linear(500, 500),
+                           nn.ReLU(),
+                           nn.Linear(500, 28),
+                           nn.ReLU(), 
+                           nn.Linear(28, 500),                        )
+    self.third_part = nn.Sequential(
+                           nn.Linear(28*28*500, self.num_classes),
+                           #scancel nn.Softmax(dim=-1),
+                         )
+
+  def forward(self, x):
+    x=self.first_part(x)
+    #print(x.shape)
+    #x = torch.flatten(x, 1) # flatten all dimensions except batch
+    #print(x.shape)
+    x=self.second_part(x)
+    x = x.view(-1, 28*28*500)
+    x=self.third_part(x)
+    return x
 
 class NoDefSplitNN(nn.Module):
   def __init__(self, num_classes=10):
