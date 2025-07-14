@@ -16,7 +16,7 @@ from torchvision.transforms import (ColorJitter, RandomCrop,
 from tqdm import tqdm
 
 from models.base_model import BaseModel
-from models.sca_model import NoDefSplitNN, ScaSplitNN, LinearNoDefSplitNN, LinearScaSplitNN
+from models.sca_model import *
 
 
 class Classifier(BaseModel):
@@ -43,102 +43,140 @@ class Classifier(BaseModel):
         architecture = architecture.lower().replace('-',
                                                     '').replace('_',
                                                                 '').strip()
-        if 'resnet' in architecture:
-            if architecture == 'resnet18':
-                weights = resnet.ResNet18_Weights.DEFAULT if pretrained else None
-                model = resnet.resnet18(weights=weights)
-            elif architecture == 'resnet34':
-                weights = resnet.ResNet34_Weights.DEFAULT if pretrained else None
-                model = resnet.resnet34(weights=weights)
-            elif architecture == 'resnet50':
-                weights = resnet.ResNet50_Weights.DEFAULT if pretrained else None
-                model = resnet.resnet50(weights=weights)
-            elif architecture == 'resnet101':
-                weights = resnet.ResNet101_Weights.DEFAULT if pretrained else None
-                model = resnet.resnet101(weights=weights)
-            elif architecture == 'resnet152':
-                weights = resnet.ResNet152_Weights.DEFAULT if pretrained else None
-                model = resnet.resnet152(weights=weights)
-            else:
-                raise RuntimeError(
-                    f'No ResNet with the name {architecture} available'
-                )
+        # if 'resnet' in architecture:
+        #     if architecture == 'resnet18':
+        #         weights = resnet.ResNet18_Weights.DEFAULT if pretrained else None
+        #         model = resnet.resnet18(weights=weights)
+        #     elif architecture == 'resnet34':
+        #         weights = resnet.ResNet34_Weights.DEFAULT if pretrained else None
+        #         model = resnet.resnet34(weights=weights)
+        #     elif architecture == 'resnet50':
+        #         weights = resnet.ResNet50_Weights.DEFAULT if pretrained else None
+        #         model = resnet.resnet50(weights=weights)
+        #     elif architecture == 'resnet101':
+        #         weights = resnet.ResNet101_Weights.DEFAULT if pretrained else None
+        #         model = resnet.resnet101(weights=weights)
+        #     elif architecture == 'resnet152':
+        #         weights = resnet.ResNet152_Weights.DEFAULT if pretrained else None
+        #         model = resnet.resnet152(weights=weights)
+        #     else:
+        #         raise RuntimeError(
+        #             f'No ResNet with the name {architecture} available'
+        #         )
 
-            if self.num_classes != model.fc.out_features:
-                # exchange the last layer to match the desired numbers of classes
-                model.fc = nn.Linear(model.fc.in_features, self.num_classes)
+        #     if self.num_classes != model.fc.out_features:
+        #         # exchange the last layer to match the desired numbers of classes
+        #         model.fc = nn.Linear(model.fc.in_features, self.num_classes)
+
+        #     return model
+
+        # elif 'resnext' in architecture:
+        #     if architecture == 'resnext50':
+        #         weights = resnet.ResNeXt50_32X4D_Weights.DEFAULT if pretrained else None
+        #         model = resnet.resnext50_32x4d(weights=weights)
+        #     elif architecture == 'resnext101':
+        #         weights = resnet.ResNeXt101_32X8D_Weights.DEFAULT if pretrained else None
+        #         model = resnet.resnext101_32x8d(weights=weights)
+        #     else:
+        #         raise RuntimeError(
+        #             f'No ResNext with the name {architecture} available')
+
+        #     if self.num_classes != model.fc.out_features:
+        #         # exchange the last layer to match the desired numbers of classes
+        #         model.fc = nn.Linear(model.fc.in_features, self.num_classes)
+
+        #     return model
+
+        # elif 'resnest' in architecture:
+        #     torch.hub.list('zhanghang1989/ResNeSt', force_reload=True)
+        #     if architecture == 'resnest50':
+        #         model = torch.hub.load('zhanghang1989/ResNeSt',
+        #                                'resnest50',
+        #                                pretrained=True)
+        #     elif architecture == 'resnest101':
+        #         model = torch.hub.load('zhanghang1989/ResNeSt',
+        #                                'resnest101',
+        #                                pretrained=True)
+        #     elif architecture == 'resnest200':
+        #         model = torch.hub.load('zhanghang1989/ResNeSt',
+        #                                'resnest200',
+        #                                pretrained=True)
+        #     elif architecture == 'resnest269':
+        #         model = torch.hub.load('zhanghang1989/ResNeSt',
+        #                                'resnest269',
+        #                                pretrained=True)
+        #     else:
+        #         raise RuntimeError(
+        #             f'No ResNeSt with the name {architecture} available')
+
+        #     if self.num_classes != model.fc.out_features:
+        #         # exchange the last layer to match the desired numbers of classes
+        #         model.fc = nn.Linear(model.fc.in_features, self.num_classes)
+
+        #     return model
+
+        # elif 'densenet' in architecture:
+        #     if architecture == 'densenet121':
+        #         weights = densenet.DenseNet121_Weights.DEFAULT if pretrained else None
+        #         model = densenet.densenet121(weights=weights)
+        #     elif architecture == 'densenet161':
+        #         weights = densenet.DenseNet161_Weights.DEFAULT if pretrained else None
+        #         model = densenet.densenet161(weights=weights)
+        #     elif architecture == 'densenet169':
+        #         weights = densenet.DenseNet169_Weights.DEFAULT if pretrained else None
+        #         model = densenet.densenet169(weights=weights)
+        #     elif architecture == 'densenet201':
+        #         weights = densenet.DenseNet201_Weights.DEFAULT if pretrained else None
+        #         model = densenet.densenet201(weights=weights)
+        #     else:
+        #         raise RuntimeError(
+        #             f'No DenseNet with the name {architecture} available')
+
+        #     if self.num_classes != model.classifier.out_features:
+        #         # exchange the last layer to match the desired numbers of classes
+        #         model.classifier = nn.Linear(model.classifier.in_features,
+        #                                      self.num_classes)
+        #     return model
+
+        # # Note: inception_v3 expects input tensors with a size of N x 3 x 299 x 299, aux_logits are used per default
+
+
+        # elif 'vit' in architecture:
+        #     if architecture == 'vitb16':
+        #         model = timm.create_model('vit_base_patch16_224',
+        #                                   pretrained=pretrained)
+        #     elif architecture == 'vitb32':
+        #         model = timm.create_model('vit_base_patch32_224',
+        #                                   pretrained=pretrained)
+        #     elif architecture == 'vitl16':
+        #         model = timm.create_model('vit_large_patch16_224',
+        #                                   pretrained=pretrained)
+        #     elif architecture == 'vitl32':
+        #         model = timm.create_model('vit_large_patch32_224',
+        #                                   pretrained=pretrained)
+        #     elif architecture == 'vith14':
+        #         model = timm.create_model('vit_huge_patch14_224',
+        #                                   pretrained=pretrained)
+        #     else:
+        #         raise RuntimeError(
+        #             f'No ViT with the name {architecture} available')
+
+        #     if self.num_classes != model.head.out_features:
+        #         # exchange the last layer to match the desired numbers of classes
+        #         model.head = nn.Linear(model.head.in_features,
+        #                                self.num_classes)
+        #     return model
+
+        if 'conv' in architecture:
+            print(f'arch == {architecture}')
+            if architecture == 'convnod':
+                model = NoDefSplitNN(self.num_classes)
+            elif architecture == 'convsca':
+                model = ScaSplitNN(self.num_classes)
+            else:
+                raise RuntimeError(f'No conv with the name {architecture} available')
 
             return model
-
-        elif 'resnext' in architecture:
-            if architecture == 'resnext50':
-                weights = resnet.ResNeXt50_32X4D_Weights.DEFAULT if pretrained else None
-                model = resnet.resnext50_32x4d(weights=weights)
-            elif architecture == 'resnext101':
-                weights = resnet.ResNeXt101_32X8D_Weights.DEFAULT if pretrained else None
-                model = resnet.resnext101_32x8d(weights=weights)
-            else:
-                raise RuntimeError(
-                    f'No ResNext with the name {architecture} available')
-
-            if self.num_classes != model.fc.out_features:
-                # exchange the last layer to match the desired numbers of classes
-                model.fc = nn.Linear(model.fc.in_features, self.num_classes)
-
-            return model
-
-        elif 'resnest' in architecture:
-            torch.hub.list('zhanghang1989/ResNeSt', force_reload=True)
-            if architecture == 'resnest50':
-                model = torch.hub.load('zhanghang1989/ResNeSt',
-                                       'resnest50',
-                                       pretrained=True)
-            elif architecture == 'resnest101':
-                model = torch.hub.load('zhanghang1989/ResNeSt',
-                                       'resnest101',
-                                       pretrained=True)
-            elif architecture == 'resnest200':
-                model = torch.hub.load('zhanghang1989/ResNeSt',
-                                       'resnest200',
-                                       pretrained=True)
-            elif architecture == 'resnest269':
-                model = torch.hub.load('zhanghang1989/ResNeSt',
-                                       'resnest269',
-                                       pretrained=True)
-            else:
-                raise RuntimeError(
-                    f'No ResNeSt with the name {architecture} available')
-
-            if self.num_classes != model.fc.out_features:
-                # exchange the last layer to match the desired numbers of classes
-                model.fc = nn.Linear(model.fc.in_features, self.num_classes)
-
-            return model
-
-        elif 'densenet' in architecture:
-            if architecture == 'densenet121':
-                weights = densenet.DenseNet121_Weights.DEFAULT if pretrained else None
-                model = densenet.densenet121(weights=weights)
-            elif architecture == 'densenet161':
-                weights = densenet.DenseNet161_Weights.DEFAULT if pretrained else None
-                model = densenet.densenet161(weights=weights)
-            elif architecture == 'densenet169':
-                weights = densenet.DenseNet169_Weights.DEFAULT if pretrained else None
-                model = densenet.densenet169(weights=weights)
-            elif architecture == 'densenet201':
-                weights = densenet.DenseNet201_Weights.DEFAULT if pretrained else None
-                model = densenet.densenet201(weights=weights)
-            else:
-                raise RuntimeError(
-                    f'No DenseNet with the name {architecture} available')
-
-            if self.num_classes != model.classifier.out_features:
-                # exchange the last layer to match the desired numbers of classes
-                model.classifier = nn.Linear(model.classifier.in_features,
-                                             self.num_classes)
-            return model
-
-        # Note: inception_v3 expects input tensors with a size of N x 3 x 299 x 299, aux_logits are used per default
         elif 'inception' in architecture:
             if pretrained:
                 weights = inception.Inception_V3_Weights.DEFAULT
@@ -153,43 +191,6 @@ class Classifier(BaseModel):
                 # exchange the last layer to match the desired numbers of classes
                 model.fc = nn.Linear(model.fc.in_features, self.num_classes)
             return model
-
-        elif 'vit' in architecture:
-            if architecture == 'vitb16':
-                model = timm.create_model('vit_base_patch16_224',
-                                          pretrained=pretrained)
-            elif architecture == 'vitb32':
-                model = timm.create_model('vit_base_patch32_224',
-                                          pretrained=pretrained)
-            elif architecture == 'vitl16':
-                model = timm.create_model('vit_large_patch16_224',
-                                          pretrained=pretrained)
-            elif architecture == 'vitl32':
-                model = timm.create_model('vit_large_patch32_224',
-                                          pretrained=pretrained)
-            elif architecture == 'vith14':
-                model = timm.create_model('vit_huge_patch14_224',
-                                          pretrained=pretrained)
-            else:
-                raise RuntimeError(
-                    f'No ViT with the name {architecture} available')
-
-            if self.num_classes != model.head.out_features:
-                # exchange the last layer to match the desired numbers of classes
-                model.head = nn.Linear(model.head.in_features,
-                                       self.num_classes)
-            return model
-
-        elif 'conv' in architecture:
-            print(f'arch == {architecture}')
-            if architecture == 'convnod':
-                model = NoDefSplitNN(self.num_classes)
-            elif architecture == 'convsca':
-                model = ScaSplitNN(self.num_classes)
-            else:
-                raise RuntimeError(f'No conv with the name {architecture} available')
-
-            return model
         elif 'linear' in architecture:
             if architecture == 'linearnod':
                 model = LinearNoDefSplitNN(self.num_classes)
@@ -198,7 +199,27 @@ class Classifier(BaseModel):
             else: 
                 raise RuntimeError(f'No linear with the name {architecture} available')
             return model
-            
+        elif 'resnet' in architecture:
+            if architecture == 'resnetnod':
+                model = ResNet152(num_classes=self.num_classes)
+            elif architecture == 'resnet18nod':
+                model = ResNet18(num_classes=self.num_classes)
+            elif architecture == 'resnetsca':
+                model = SCAResNet152(num_classes=self.num_classes)
+            elif architecture == 'resnet18sca':
+                model = SCAResNet18(num_classes=self.num_classes)
+            else: 
+                print("*****",architecture,architecture == 'resnetnod')
+                raise RuntimeError(f'No linear with the name {architecture} available')
+            return model
+        elif 'vgg' in architecture:
+            if architecture == 'vggnod':
+                model = VGG16(num_classes=self.num_classes)
+            elif architecture == 'vggsca':
+                model = SCAVGG16(num_classes=self.num_classes)
+            else: 
+                raise RuntimeError(f'No linear with the name {architecture} available')
+            return model
         else:
             raise RuntimeError(
                 f'No network with the name {architecture} available')
@@ -298,8 +319,24 @@ class Classifier(BaseModel):
         metric_train = metric()
 
         print('----------------------- START TRAINING -----------------------')
-        for epoch in range(num_epochs):
+        # Load the checkpoint
+        start_ckpt = os.getenv('start_ckpt', None)
+        if start_ckpt:
+            print(f"Resuming from {start_ckpt} .....")
+            checkpoint = torch.load(start_ckpt)
+
+            # Restore the states
+            self.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            start_epoch = int(checkpoint['epoch'])+1
+        else:
+            start_epoch = 0
+            
+            
+        for epoch in tqdm(range(num_epochs)):
             # Training
+            if epoch < start_epoch:
+                continue
             print(f'Epoch {epoch + 1}/{num_epochs}')
             running_total_loss = 0.0
             running_main_loss = 0.0
@@ -431,7 +468,31 @@ class Classifier(BaseModel):
             # make the lr scheduler step
             if lr_scheduler is not None:
                 lr_scheduler.step()
+            if save_base_path:
+                if not os.path.exists(save_base_path):
+                    os.makedirs(save_base_path)
+                if validation_data:
+                    model_path = os.path.join(
+                        save_base_path, self.name +
+                        f'_epoch{epoch}_{best_model_values["validation_metric"]:.4f}' + '.pth')
+                else:
+                    model_path = os.path.join(
+                        save_base_path, self.name +
+                        f'_epoch{epoch}_{best_model_values["training_metric"]:.4f}_no_val' +
+                        '.pth')
 
+            else:
+                model_path = self.name
+
+            torch.save(
+                {
+                    'epoch':
+                    epoch,
+                    'model_state_dict':
+                    best_model_values['model_state_dict'],
+                    'optimizer_state_dict':
+                    best_model_values['model_optimizer_state_dict'],
+                }, model_path)
         # save the final model
         if validation_data:
             self.load_state_dict(best_model_values['model_state_dict'])

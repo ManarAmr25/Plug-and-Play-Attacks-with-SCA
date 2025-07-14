@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import torch
 from pytorch_fid.inception import InceptionV3
-
+from tqdm import tqdm
 sys.path.insert(0, '/workspace')
 from datasets.custom_subset import SingleClassSubset
 from utils.stylegan import create_image
@@ -33,7 +33,8 @@ class PRCD:
         recall_list = []
         density_list = []
         coverage_list = []
-        for step, cls in enumerate(range(num_classes)):
+        print("$#$ in compute prcd metric:",num_classes)
+        for step, cls in tqdm(enumerate(range(num_classes)),desc="PRCD",total=num_classes):
             with torch.no_grad():
                 embedding_fake = self.compute_embedding(self.dataset_fake, cls)
                 embedding_real = self.compute_embedding(self.dataset_real, cls)
@@ -41,6 +42,8 @@ class PRCD:
                 pair_dist_real = torch.sort(pair_dist_real, dim=1, descending=False)[0]
                 pair_dist_fake = torch.cdist(embedding_fake, embedding_fake, p=2)
                 pair_dist_fake = torch.sort(pair_dist_fake, dim=1, descending=False)[0]
+                print("---->",embedding_real.shape,embedding_fake.shape,len(pair_dist_real), len(pair_dist_fake))
+                print(len(self.dataset_real))
                 radius_real = pair_dist_real[:, k]
                 radius_fake = pair_dist_fake[:, k]
 
@@ -82,6 +85,7 @@ class PRCD:
         self.inception_model.eval()
         if cls:
             dataset = SingleClassSubset(dataset, cls)
+            print("--> cls and data",cls,len(dataset))
         dataloader = torch.utils.data.DataLoader(dataset,
                                                  batch_size=self.batch_size,
                                                  shuffle=False,
@@ -91,11 +95,11 @@ class PRCD:
         pred_arr = np.empty((len(dataset), self.dims))
         start_idx = 0
         max_iter = int(len(dataset) / self.batch_size)
-        for step, (x, y) in enumerate(dataloader):
+        for step, (x, y) in tqdm(enumerate(dataloader),total=len(dataloader),desc="embedding"):
             with torch.no_grad():
                 if x.shape[1] != 3:
                     x = create_image(x, self.generator,
-                                     crop_size=self.crop_size, resize=299, batch_size=int(self.batch_size / 2))
+                                     crop_size=self.crop_size, resize=32, batch_size=int(self.batch_size / 2))
 
                 x = x.to(self.device)
                 pred = self.inception_model(x)[0]

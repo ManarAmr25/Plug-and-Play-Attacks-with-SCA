@@ -8,7 +8,7 @@ import torchvision
 import torchvision.transforms.functional as F
 
 import sys
-
+sys.path.append("/scratch/mt/new-structure/experiments/msaeed/side/privacy/Plug-and-Play-Attacks-with-SCA/stylegan2-ada-pytorch")
 
 def adjust_gen_images(imgs: torch.tensor,
                       bounds: Tuple[torch.tensor, torch.tensor], size: int):

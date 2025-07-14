@@ -1,0 +1,62 @@
+---
+seed: 42
+
+model:
+  architecture: convNod # options: convNod, convSca, linearNod, linearSca
+  num_classes: 10
+  pretrained: false
+
+dataset:
+  # type: celeba_identities
+  type: cifar10
+  path: /scratch/mt/new-structure/experiments/msaeed/side/privacy/SCA-code-modified-main/data/cifar-10-batches-py
+  validation_set_size: 0
+  image_size: 32
+transformations:
+  # Resize:
+  #   size: [40, 40]
+  # RandomCrop:
+  #   size: [32, 32]
+  # RandomRotation:
+  #   degrees: 15
+  # RandomHorizontalFlip:
+  #   p: 0.5
+  ToTensor: {}
+  Normalize:
+    mean: [0.5, 0.5, 0.5]
+    std: [0.5, 0.5, 0.5]
+
+optimizer:
+  # Adam:
+  #   lr: 0.001
+  #   betas: [0.9, 0.999]
+  #   weight_decay: 0.0
+  SGD:
+    lr: 0.001
+    momentum: 0.9
+
+lr_scheduler:
+  MultiStepLR:
+    milestones: [75, 90]
+    gamma: 0.1
+
+training:
+  # num_epochs: 100
+  num_epochs: 25
+  # batch_size: 128
+  batch_size: 32
+  label_smoothing: 0.0
+  dataloader_num_workers: 8
+  save_path: results-cifar/conv-nod/
+
+rtpt:
+  experiment_name: Training target classifier
+  name_initials: XX
+
+wandb:
+  # enable_logging: true
+  enable_logging: false
+  args:
+    project: model_inversion_targets_cifar10
+    name: SCA_Cifar10
+    save_code: true

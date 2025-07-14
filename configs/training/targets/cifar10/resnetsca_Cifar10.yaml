@@ -2,14 +2,14 @@
 seed: 42
 
 model:
-  architecture: convNod # options: convNod, convSca, linearNod, linearSca
+  architecture: resnetSca # options: convNod, convSca, linearNod, linearSca
   num_classes: 10
   pretrained: false
 
 dataset:
   # type: celeba_identities
   type: cifar10
-  path: /content/data/cifar10
+  path: /scratch/mt/new-structure/experiments/msaeed/side/privacy/SCA-code-modified-main/data/cifar-10-batches-py
   validation_set_size: 0
   image_size: 32
 transformations:
@@ -42,12 +42,12 @@ lr_scheduler:
 
 training:
   # num_epochs: 100
-  num_epochs: 1
+  num_epochs: 25
   # batch_size: 128
   batch_size: 32
   label_smoothing: 0.0
   dataloader_num_workers: 8
-  save_path: results/
+  save_path: results-cifar/resnet-sca/
 
 rtpt:
   experiment_name: Training target classifier

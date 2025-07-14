@@ -6,7 +6,7 @@ from torch.utils.data.dataset import TensorDataset
 from utils.stylegan import create_image
 
 from metrics.accuracy import Accuracy, AccuracyTopK
-
+from tqdm import tqdm
 
 class ClassificationAccuracy():
 
@@ -33,10 +33,9 @@ class ClassificationAccuracy():
         maximum_confidences = []
 
         max_iter = math.ceil(len(dataset) / batch_size)
-
+        d_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         with torch.no_grad():
-            for step, (w_batch, target_batch) in enumerate(
-                    DataLoader(dataset, batch_size=batch_size, shuffle=False)):
+            for step, (w_batch, target_batch) in tqdm(enumerate(d_loader), desc="Classification accuracy",total=len(d_loader)):
                 w_batch, target_batch = w_batch.to(
                     self.device), target_batch.to(self.device)
                 imgs = create_image(w_batch,
@@ -45,6 +44,9 @@ class ClassificationAccuracy():
                                     resize=resize,
                                     batch_size=batch_size)
                 imgs = imgs.to(self.device)
+                # print("****",imgs.shape,target_batch.shape)
+                # print("****$",imgs)
+                # print("****##",target_batch)
                 output = self.evaluation_network(imgs)
 
                 acc_top1.update(output, target_batch)

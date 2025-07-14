@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from utils.stylegan import create_image
 import torchvision.transforms as T
 from torch.utils.data import TensorDataset, DataLoader
+from tqdm import tqdm
 
 
 def scores_by_transform(imgs,
@@ -48,7 +49,7 @@ def perform_final_selection(w,
             T.RandomHorizontalFlip(0.5)
         ])
 
-    for step, target in enumerate(target_values):
+    for step, target in tqdm(enumerate(target_values),desc="Final selection iters",total=len(target_values)):
         mask = torch.where(targets == target, True, False).cpu()
         w_masked = w[mask]
         candidates = create_image(w_masked,
@@ -59,7 +60,8 @@ def perform_final_selection(w,
         targets_masked = targets[mask].cpu()
         scores = []
         dataset = TensorDataset(candidates, targets_masked)
-        for imgs, t in DataLoader(dataset, batch_size=batch_size):
+        d_loader =DataLoader(dataset, batch_size=batch_size)
+        for imgs, t in tqdm(d_loader,desc="dataset",total=len(d_loader)):
             imgs, t = imgs.to(device), t.to(device)
 
             scores.append(

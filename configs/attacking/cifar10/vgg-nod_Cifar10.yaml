@@ -1,0 +1,65 @@
+---
+stylegan_model: stylegan2-ada-pytorch/cifar10u-cifar-ada-best-is.pkl
+seed: 42
+dataset:
+  type: cifar10
+  path: /scratch/mt/new-structure/experiments/msaeed/side/privacy/SCA-code-modified-main/data/cifar-10-batches-py
+
+target_model:
+  architecture: vggNod # options: convNod, convSca
+  num_classes: 10
+  weights: /scratch/mt/new-structure/experiments/msaeed/side/privacy/Plug-and-Play-Attacks-with-SCA/results-cifar/vgg-nod/vggNod_20250712_234731/Classifier_0.9982_no_val.pth
+evaluation_model:
+  architecture: inception-v3 # architecture of evaluation model
+  num_classes: 10 # number of output neurons
+  pretrained: true
+  # weights: trained_models/facescrub/inception_v3_facescrub.pt # link to weight file
+
+candidates:
+  num_candidates: 50
+  candidate_search:
+    search_space_size: 1000
+    center_crop: 800
+    resize: 32
+    horizontal_flip: true
+    batch_size: 25
+    truncation_psi: 0.5
+    truncation_cutoff: 8
+
+attack:
+  batch_size: 25
+  num_epochs: 25
+  targets: all
+  discriminator_loss_weight: 0.0
+  single_w: true
+  clip: false
+  # transformations:
+  #   CenterCrop:
+  #     size: 800
+  #   Resize:
+  #     size: 32
+  #     antialias: true
+  #   RandomResizedCrop:
+  #     size: [32, 32]
+  #     scale: [0.9, 1.0]
+  #     ratio: [1.0, 1.0]
+  #     antialias: true
+
+  optimizer:
+    Adam:
+      lr: 0.005
+      weight_decay: 0
+      betas: [0.1, 0.1]
+
+final_selection:
+  samples_per_target: 50
+  approach: transforms
+  iterations: 10
+
+
+wandb:
+  enable_logging: false
+  wandb_init_args:
+    project: model_inversion_attacks
+    save_code: true
+    name: Attack_Cifar10

@@ -26,7 +26,7 @@ from utils.datasets import (create_target_dataset, get_facescrub_idx_to_class,
                             get_stanford_dogs_idx_to_class)
 from utils.stylegan import create_image, load_discrimator, load_generator
 from utils.wandb import *
-
+from tqdm import tqdm
 
 def main():
     ####################################
@@ -41,6 +41,7 @@ def main():
     # Define and parse attack arguments
     parser = create_parser()
     config, args = parse_arguments(parser)
+    print("CONFIG:",config, config.num_classes)
 
     # Set seeds
     torch.manual_seed(config.seed)
@@ -64,11 +65,13 @@ def main():
         idx_to_class = KeyDict()
 
     # Load pre-trained StyleGan2 components
+    print("Load stylegan")
     G = load_generator(config.stylegan_model)
     D = load_discrimator(config.stylegan_model)
     num_ws = G.num_ws
 
     # Load target model and set dataset
+    print("Load target model and dataset")
     target_model = config.create_target_model()
     target_model_name = target_model.name
     target_dataset = config.get_target_dataset()
@@ -87,6 +90,10 @@ def main():
     targets = config.create_target_vector()
 
     # Create initial style vectors
+    # print("Create initial vectors ...")
+    # print(G)
+    # print(target_model)
+    # print(targets)
     w, w_init, x, V = create_initial_vectors(config, G, target_model, targets,
                                              device)
     del G
@@ -106,7 +113,7 @@ def main():
     for key in config.attack:
         print(f'\t{key}: {config.attack[key]}')
     print(
-        f'Performing attack on {torch.cuda.device_count()} gpus and an effective batch size of {batch_size} images.'
+        f'Performing attack on {torch.cuda.device_count()} gpus and an effective batch size of {batch_size} images.', flush=True
     )
 
     # Initialize RTPT
@@ -141,7 +148,7 @@ def main():
     w_optimized = []
 
     # Prepare batches for attack
-    for i in range(math.ceil(w.shape[0] / batch_size)):
+    for i in tqdm(range(math.ceil(w.shape[0] / batch_size)),desc="Prepare batches"):
         w_batch = w[i * batch_size:(i + 1) * batch_size].cuda()
         targets_batch = targets[i * batch_size:(i + 1) * batch_size].cuda()
         print(
@@ -179,7 +186,7 @@ def main():
     if config.final_selection:
         print(
             f'\nSelect final set of max. {config.final_selection["samples_per_target"]} ',
-            f'images per target using {config.final_selection["approach"]} approach.'
+            f'images per target using {config.final_selection["approach"]} approach.',flush=True
         )
         final_w, final_targets = perform_final_selection(
             w_optimized_unselected,
@@ -188,7 +195,7 @@ def main():
             targets,
             target_model,
             device=device,
-            batch_size=batch_size * 10,
+            batch_size=batch_size ,
             **config.final_selection,
             rtpt=rtpt)
         print(f'Selected a total of {final_w.shape[0]} final images ',
@@ -209,6 +216,7 @@ def main():
     ####################################
 
     # Compute attack accuracy with evaluation model on all generated samples
+    print("Start calc attack accuracy",flush=True)
     try:
         evaluation_model = config.create_evaluation_model()
         evaluation_model = torch.nn.DataParallel(evaluation_model)
@@ -222,7 +230,7 @@ def main():
             targets,
             synthesis,
             config,
-            batch_size=batch_size * 2,
+            batch_size=batch_size ,
             resize=299,
             rtpt=rtpt)
 
@@ -246,7 +254,7 @@ def main():
                 final_targets,
                 synthesis,
                 config,
-                batch_size=batch_size * 2,
+                batch_size=batch_size ,
                 resize=299,
                 rtpt=rtpt)
             if config.logging:
@@ -267,7 +275,7 @@ def main():
     ####################################
     #    FID Score and GAN Metrics     #
     ####################################
-
+    print("Calc FID scores",flush=True)
     fid_score = None
     precision, recall = None, None
     density, coverage = None, None
@@ -288,14 +296,16 @@ def main():
         training_dataset = ClassSubset(
             training_dataset,
             target_classes=torch.unique(final_targets).cpu().tolist())
-
+        # print("Hiiiii", len(attack_dataset),len(training_dataset))
+        # print("Hiiiii**", attack_dataset[0])
+        # print("Hiiiii**", training_dataset[0])
         # compute FID score
         fid_evaluation = FID_Score(training_dataset,
                                    attack_dataset,
                                    device=device,
                                    crop_size=crop_size,
                                    generator=synthesis,
-                                   batch_size=batch_size * 3,
+                                   batch_size=batch_size ,
                                    dims=2048,
                                    num_workers=8,
                                    gpu_devices=gpu_devices)
@@ -305,17 +315,25 @@ def main():
         )
 
         # compute precision, recall, density, coverage
+        print("Precision and recall start ...",flush=True)
         prdc = PRCD(training_dataset,
                     attack_dataset,
                     device=device,
                     crop_size=crop_size,
                     generator=synthesis,
-                    batch_size=batch_size * 3,
+                    batch_size=batch_size ,
                     dims=2048,
                     num_workers=8,
                     gpu_devices=gpu_devices)
+        print("Before prdc",config.num_classes)
+        # precision, recall, density, coverage = prdc.compute_metric(
+        #     num_classes=5, k=2, rtpt=rtpt)
+        if config.dataset['type']=="celeba_attr":
+            k=2
+        else:
+            k=3
         precision, recall, density, coverage = prdc.compute_metric(
-            num_classes=config.num_classes, k=3, rtpt=rtpt)
+            num_classes=config.num_classes, k=k, rtpt=rtpt)
         print(
             f' Precision: {precision:.4f}, Recall: {recall:.4f}, Density: {density:.4f}, Coverage: {coverage:.4f}'
         )
@@ -338,6 +356,7 @@ def main():
         evaluation_model_dist.eval()
 
         # Compute average feature distance on Inception-v3
+        print("Eval feature distance ...",flush=True)
         evaluate_inception = DistanceEvaluation(evaluation_model_dist,
                                                 synthesis, 299,
                                                 config.attack_center_crop,
@@ -345,7 +364,7 @@ def main():
         avg_dist_inception, mean_distances_list = evaluate_inception.compute_dist(
             final_w,
             final_targets,
-            batch_size=batch_size_single * 5,
+            batch_size=batch_size_single ,
             rtpt=rtpt)
 
         if config.logging:
@@ -376,7 +395,7 @@ def main():
             avg_dist_facenet, mean_distances_list = evaluater_facenet.compute_dist(
                 final_w,
                 final_targets,
-                batch_size=batch_size_single * 8,
+                batch_size=batch_size_single,
                 rtpt=rtpt)
             if config.logging:
                 filename_distance = write_precision_list(
@@ -410,7 +429,7 @@ def main():
         log_max_confidences = []
         log_target_confidences = []
         # Log images with smallest feature distance
-        for label in label_subset:
+        for label in tqdm(label_subset):
             mask = torch.where(final_targets == label, True, False)
             w_masked = final_w[mask][:num_imgs]
             imgs = create_image(w_masked,

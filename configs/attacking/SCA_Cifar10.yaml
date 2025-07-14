@@ -1,14 +1,14 @@
 ---
-stylegan_model: Pnp_stylegan3/stylegan2-ada-pytorch/cifar10.pkl
+stylegan_model: stylegan2-ada-pytorch/cifar10u-cifar-ada-best-is.pkl
 seed: 42
 dataset:
   type: cifar10
-  path: /content/data/cifar10
+  path: /scratch/mt/new-structure/experiments/msaeed/side/privacy/SCA-code-modified-main/data/cifar-10-batches-py
 
 target_model:
   architecture: convNod # options: convNod, convSca
   num_classes: 10
-  weights: /content/drive/MyDrive/Masters/PrivacyML/SCA-code-modified/results/convNod_20250712_212306/Classifier_0.5494_no_val.pth
+  weights: /scratch/mt/new-structure/experiments/msaeed/side/privacy/Plug-and-Play-Attacks-with-SCA/results-cifar/conv-nod/convNod_20250712_230550/Classifier_0.9934_no_val.pth
 evaluation_model:
   architecture: inception-v3 # architecture of evaluation model
   num_classes: 10 # number of output neurons
@@ -22,12 +22,12 @@ candidates:
     center_crop: 800
     resize: 32
     horizontal_flip: true
-    batch_size: 1
+    batch_size: 25
     truncation_psi: 0.5
     truncation_cutoff: 8
 
 attack:
-  batch_size: 1
+  batch_size: 25
   num_epochs: 1
   targets: all
   discriminator_loss_weight: 0.0

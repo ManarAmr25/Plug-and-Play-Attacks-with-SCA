@@ -17,7 +17,7 @@ import pytorch_fid.fid_score
 import torch
 from pytorch_fid.inception import InceptionV3
 from utils.stylegan import create_image
-
+from tqdm import tqdm
 IMAGE_EXTENSIONS = ('bmp', 'jpg', 'jpeg', 'pgm', 'png', 'ppm',
                     'tif', 'tiff', 'webp')
 
@@ -42,8 +42,14 @@ class FID_Score:
         self.inception_model.to(device)
             
     def compute_fid(self, rtpt=None):
+        # print("FID: compute Stats")
+        # print(self.dataset_1[0])
+        # print("-----")
+        # print(self.dataset_2[0])
+        # print("**********")
         m1, s1 = self.compute_statistics(self.dataset_1, rtpt)
         m2, s2 = self.compute_statistics(self.dataset_2, rtpt)
+        print("FID: compute scores")
         fid_value = pytorch_fid.fid_score.calculate_frechet_distance(
             m1, s1, m2, s2)
         return fid_value
@@ -59,7 +65,7 @@ class FID_Score:
         pred_arr = np.empty((len(dataset), self.dims))
         start_idx = 0
         max_iter = int(len(dataset) / self.batch_size)
-        for step, (x, y) in enumerate(dataloader):
+        for step, (x, y) in tqdm(enumerate(dataloader),desc="Calc Stats for FID", total=len(dataloader)):
             with torch.no_grad():
                 if x.shape[1] != 3:
                     x = create_image(x, self.generator,

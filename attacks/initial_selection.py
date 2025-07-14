@@ -44,7 +44,7 @@ def find_initial_w(generator,
     c = None
     target_model.eval()
     five_crop = None
-
+    # print(z,c,truncation_psi,truncation_cutoff)
     with torch.no_grad():
         confidences = []
         final_candidates = []

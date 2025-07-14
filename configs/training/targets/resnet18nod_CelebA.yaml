@@ -1,0 +1,62 @@
+---
+seed: 42
+
+model:
+  architecture: resnet18Nod # options: convNod, convSca
+  num_classes: 5
+  pretrained: true
+
+dataset:
+  # type: celeba_identities
+  type: celeba_attr
+  path: /scratch/mt/new-structure/experiments/msaeed/side/privacy/SCA-code-modified-main/data/celeba
+  validation_set_size: 0
+  image_size: 32
+transformations:
+  RandomResizedCrop:
+    size: [32, 32]
+    scale: [0.85, 1]
+    ratio: [1, 1]
+    antialias: true
+  ColorJitter:
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.1
+    hue: 0.1
+  RandomHorizontalFlip:
+    p: 0.5
+
+optimizer:
+  # Adam:
+  #   lr: 0.001
+  #   betas: [0.9, 0.999]
+  #   weight_decay: 0.0
+  SGD:
+    lr: 0.001
+    momentum: 0.9
+
+lr_scheduler:
+  MultiStepLR:
+    milestones: [75, 90]
+    gamma: 0.1
+
+training:
+  num_epochs: 25
+  # num_epochs: 1
+  # batch_size: 128
+  batch_size: 128
+  label_smoothing: 0.0
+  dataloader_num_workers: 8
+  save_path: results/celeba-resnet18-nod
+
+rtpt:
+  experiment_name: Training target classifier
+  name_initials: XX
+
+wandb:
+  # enable_logging: true
+  enable_logging: false
+  args:
+    project: model_inversion_targets_celeba
+    name: SCA_CelebA
+    save_code: true

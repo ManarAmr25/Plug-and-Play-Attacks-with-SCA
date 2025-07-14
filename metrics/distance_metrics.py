@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import TensorDataset
 from torchvision.transforms.transforms import Resize
 from utils.stylegan import create_image
-
+from tqdm import tqdm
 
 class DistanceEvaluation():
 
@@ -99,19 +99,29 @@ class DistanceEvaluation():
         target_values = set(targets.cpu().tolist())
         smallest_distances = []
         mean_distances_list = [['target', 'mean_dist']]
-        for step, target in enumerate(target_values):
+        print("###Target values:",len(target_values), target_values)
+        for target in target_values:
+            target_subset = SingleClassSubset(self.train_set,
+                                    target_class=target)
+            print("$$$$$$$$$ cls", target,"-->",len(target_subset))
+        for step, target in tqdm(enumerate(target_values),desc="Compute dist",total=len(target_values)):
             mask = torch.where(targets == target, True, False)
             w_masked = w[mask]
             target_subset = SingleClassSubset(self.train_set,
                                               target_class=target)
-
+            print("###Target subset:",len(target_subset),target)
             target_embeddings = []
             for x, y in DataLoader(target_subset, batch_size):
                 with torch.no_grad():
                     x = x.to(self.device)
                     outputs = self.model(x)
                     target_embeddings.append(outputs.cpu())
-
+            try:
+                print("target embeddings -->",len(target_embeddings))
+                print("target embeddings -->",target_embeddings[0].shape)
+            except:
+                print("SKip ",target)
+                continue
             attack_embeddings = []
             for w_batch in DataLoader(TensorDataset(w_masked),
                                       batch_size,
@@ -127,7 +137,10 @@ class DistanceEvaluation():
                     imgs = imgs.to(self.device)
                     outputs = self.model(imgs)
                     attack_embeddings.append(outputs.cpu())
-
+                    
+            print("attack embeddings -->",len(attack_embeddings))
+            print("attack embeddings -->",attack_embeddings[0].shape)
+            
             target_embeddings = torch.cat(target_embeddings, dim=0)
             attack_embeddings = torch.cat(attack_embeddings, dim=0)
             distances = torch.cdist(attack_embeddings, target_embeddings,

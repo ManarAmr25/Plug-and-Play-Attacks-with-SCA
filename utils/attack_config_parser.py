@@ -20,6 +20,8 @@ class AttackConfigParser:
         with open(config_file, 'r') as file:
             config = yaml.safe_load(file)
         self._config = config
+        print("-*-*",config_file)
+        print("-*-*",config)
 
     def create_target_model(self):
         if 'wandb_target_run' in self._config:
@@ -270,7 +272,8 @@ class AttackConfigParser:
         if isinstance(targets, int):
             return 1
         else:
-            return len(targets)
+            # print("Hola",targets)
+            return self._config['target_model']['num_classes'] #len(targets)
 
     @property
     def log_progress(self):
